@@ -1,10 +1,22 @@
 const simple = require('simple-mock')
 const createEntryAccessory = require('../src/createEntryAccessory')
 
+class MockGarageDoorOpener {
+  getCharacteristic() {
+    return this
+  }
+  on() {
+    return this
+  }
+}
+
 const mockHomebridge = {
   hap: {
-    Service: {},
+    Service: {
+      GarageDoorOpener: MockGarageDoorOpener,
+    },
     Characteristic: {
+      CurrentDoorState: {},
       TargetDoorState: {
         OPEN: 0,
         CLOSED: 1,

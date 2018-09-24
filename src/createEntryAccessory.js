@@ -8,80 +8,72 @@ const OPENING = 2
 const CLOSING = 3
 const STOPPED = 4
 
+const configureMappers = (mapperConfigs = []) => {
+  return mapperConfigs.reduce((acc, matches) => {
+    const mapper = mappers[matches.type]
+    return mapper
+      ? acc.concat(mapper(matches.parameters))
+      : acc
+  }, [])
+}
+
+const configureApi = (apiConfig = {}) => {
+  return [
+    'getCurrentState',
+    'getTargetState',
+    'open',
+    'close',
+  ].reduce((acc, endpoint) => ({
+    ...acc,
+    [endpoint]: apiConfig[endpoint]
+  }), {})
+}
+
 module.exports = (homebridge) => {
   const { Service, Characteristic } = homebridge.hap
 
   return class EntryAccessory {
     constructor(log, config) {
       this.log = log
-
-      this.name = config.name
-      this.debug = config.debug
-      this.pollInterval = config.pollInterval
-
-      this.mappers = this._configureMappers(config.mappers)
-      this.api = this._configureApi(config.api)
-
-      this.auth = {
-        username: config.username,
-        password: config.password,
-      }
+      this.config = config
 
       this.state = {
         target: null,
         current: null,
       }
-      this.service = null
+
+      this.mappers = configureMappers(config.mappers)
+      this.api = configureApi(config.api)
       this.getCurrentState = this._getStateType('current')
       this.getTargetState = this._getStateType('target')
+      this.service = this._configureGarageDoorOpenerService()
 
-      if (this.pollInterval) {
+      if (this.config.pollInterval) {
         this._startPolling()
       }
     }
 
     identify(callback) {
-      callback(this.name)
+      callback(this.config.name)
     }
 
     getServices() {
-      this.service = new Service.GarageDoorOpener(this.name)
+      return [this.service]
+    }
 
-      this.service
+    _configureGarageDoorOpenerService() {
+      const service = new Service.GarageDoorOpener(this.config.name)
+
+      service
         .getCharacteristic(Characteristic.CurrentDoorState)
         .on('get', this.getCurrentState)
 
-      this.service
+      service
         .getCharacteristic(Characteristic.TargetDoorState)
         .on('get', this.getTargetState)
         .on('set', this.setTargetState.bind(this))
 
-      return [this.service]
-    }
-
-    _configureMappers(mapperConfig = []) {
-      return mapperConfig.reduce((acc, matches) => {
-        const mapper = mappers[matches.type]
-        return mapper
-          ? acc.concat(mapper(matches.parameters))
-          : acc
-      }, [])
-    }
-
-    _configureApi(apiConfig = {}) {
-      return [
-        'getCurrentState',
-        'getTargetState',
-        'open',
-        'close',
-      ].reduce((acc, key) => ({
-        ...acc,
-        [key]: {
-          body: '',
-          method: 'GET',
-          ...apiConfig[key]
-        }
-      }), {})
+      return service
     }
 
     _applyMappers(string) {
@@ -90,27 +82,14 @@ module.exports = (homebridge) => {
 
     _startPolling() {
       const emitter = pollingtoevent(this.getCurrentState, {
-        interval: this.pollInterval,
+        interval: this.config.pollInterval,
         longpolling: true,
       })
 
       emitter.on('longpoll', (state) => {
-        switch (state) {
-          case OPENING:
-            return this.service
-              .getCharacteristic(Characteristic.TargetDoorState)
-              .setValue(OPEN)
-
-          case CLOSING:
-            return this.service
-              .getCharacteristic(Characteristic.TargetDoorState)
-              .setValue(CLOSED)
-
-          default:
-            return this.service
-              .getCharacteristic(Characteristic.CurrentDoorState)
-              .setValue(state)
-        }
+        this.service
+          .getCharacteristic(Characteristic.CurrentDoorState)
+          .setValue(state)
       })
 
       emitter.on('err', (err) => {
@@ -120,18 +99,13 @@ module.exports = (homebridge) => {
 
     _request(config, callback) {
       request({
-        url: config.url,
-        body: config.body,
-        method: config.method,
-        auth: this.auth,
-        headers: {
-          Authorization: 'Basic ' + new Buffer(this.auth.username + ':' + this.auth.password).toString('base64')
-        }
+        ...config,
+        auth: this.config.auth,
       }, callback)
     }
 
     _debugLog() {
-      if (this.debug) {
+      if (this.config.debug) {
         this.log.apply(this, arguments)
       }
     }
@@ -141,13 +115,15 @@ module.exports = (homebridge) => {
       callback(err)
     }
 
-    _getTargetApiConfig(targetState) {
-      switch (targetState) {
-        case Characteristic.TargetDoorState.OPEN:
-          return this.api.open
+    _getTargetApi(targetState) {
+      const { OPEN, CLOSED } = Characteristic.TargetDoorState
 
-        case Characteristic.TargetDoorState.CLOSED:
-          return this.api.close
+      if (targetState === OPEN) {
+        return this.api.open
+      }
+
+      if (targetState === CLOSED) {
+        return this.api.close
       }
     }
 
@@ -156,7 +132,7 @@ module.exports = (homebridge) => {
         return callback(null)
       }
 
-      this._request(config, (err, response, body) => {
+      this._request(config, (err, resp, body) => {
         if (err) {
           return this._handleError(err, callback)
         }
@@ -184,20 +160,21 @@ module.exports = (homebridge) => {
     }
 
     setTargetState(targetState, callback) {
-      this.log('Setting target state to %s', targetState)
-      const targetConfig = this._getTargetApiConfig(targetState)
+      const api = this._getTargetApi(targetState)
 
-      if (!targetConfig.url) {
+      if (!api.url) {
         return callback(null)
       }
 
-      return this._request(targetConfig, (err, response) => {
+      this.log('Setting target state to %s', targetState)
+
+      return this._request(api, (err, resp) => {
         if (err) {
           return this._handleError(err, callback)
         }
 
         this.log('Set state successfully')
-        callback(err, response, targetState)
+        callback(err, resp, targetState)
       })
 
     }
