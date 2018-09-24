@@ -1,5 +1,5 @@
 const simple = require('simple-mock')
-const createEntryAccessory = require('../src/createEntryAccessory')
+const createEntryAccessory = require('../src/EntryAccessory')
 
 class MockGarageDoorOpener {
   getCharacteristic() {
