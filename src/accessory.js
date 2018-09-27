@@ -1,6 +1,8 @@
 const request = require('request')
-const mappers = require('./mappers')
 const configurePubSub = require('./configurePubSub')
+const configureMappers = require('./configureMappers')
+const configureEndpoints = require('./configureEndpoints')
+const configureLogger = require('./configureLogger')
 
 const OPEN = 0
 const CLOSED = 1
@@ -8,37 +10,8 @@ const OPENING = 2
 const CLOSING = 3
 const STOPPED = 4
 
-const configureMappers = (mapperConfigs = []) => {
-  return mapperConfigs.reduce((acc, matches) => {
-    const mapper = mappers[matches.type]
-    return mapper
-      ? acc.concat(mapper(matches.parameters))
-      : acc
-  }, [])
-}
-
-const configureEndpoints = (endpoints = {}) => {
-  return [
-    'getCurrentState',
-    'getTargetState',
-    'open',
-    'close',
-  ].reduce((acc, endpoint) => ({
-    ...acc,
-    [endpoint]: endpoints[endpoint]
-  }), {})
-}
-
-const createLogger = (log, level) => {
-  return {
-    log: (args) => level > 0 && log.apply(log, args),
-    verbose: (args) => level > 1 && log.apply(log, args),
-  }
-}
-
 module.exports = (homebridge) => {
-  const Service = homebridge.hap.Service
-  const Characteristic = homebridge.hap.Characteristic
+  const { Service, Characteristic } = homebridge.hap
 
   return class EntryAccessory {
     constructor(log, config) {
@@ -49,7 +22,7 @@ module.exports = (homebridge) => {
         current: null,
       }
 
-      this.logger = createLogger(log, config.logLevel)
+      this.log = configureLogger(log, config.enableDebugLog)
       this.mappers = configureMappers(config.mappers)
       this.endpoints = configureEndpoints(config.endpoints)
 
@@ -103,8 +76,8 @@ module.exports = (homebridge) => {
     }
 
     _handleError(err, callback) {
-      this.logger.log('!! %s', err.message)
-      callback(err)
+      this.log.error(err.message)
+      callback && callback(err)
     }
 
     _getTargetApi(targetState) {
@@ -143,7 +116,7 @@ module.exports = (homebridge) => {
         this._getState(api, (err, state) => {
           if (this.state[stateType] !== state) {
             this.state[stateType] = state
-            this.logger.verbose('%s state changed to %s', stateType, state)
+            this.log.debug('%s state changed to %s', stateType, state)
           }
 
           callback(err, state)
@@ -158,14 +131,14 @@ module.exports = (homebridge) => {
         return callback(null)
       }
 
-      this.logger.verbose('Setting target state to %s', targetState)
+      this.log.debug('Setting target state to %s', targetState)
 
       return this._request(api, (err, resp) => {
         if (err) {
           return this._handleError(err, callback)
         }
 
-        this.logger.verbose('Set state successfully')
+        this.log.debug('Set state successfully')
         callback(err, resp, targetState)
       })
 

@@ -1,6 +1,6 @@
 const mappers = require('../src/mappers')
 
-describe('static mapper', () => {
+describe('staticMapper', () => {
   it('maps a static value to another', () => {
     const params = {
       mapping: {

@@ -1,4 +1,5 @@
 const simple = require('simple-mock')
+const Logger = require('homebridge/lib/logger').Logger
 const accessory = require('../src/accessory')
 
 class MockGarageDoorOpener {
@@ -33,7 +34,7 @@ const responses = {
   complex: [null, {}, `It's open`],
 }
 
-const log = console.log
+const log = Logger.withPrefix('EntryAccessory')
 
 const config = {
   name: 'Gate',
