@@ -1,5 +1,5 @@
 const simple = require('simple-mock')
-const createEntryAccessory = require('../src/EntryAccessory')
+const accessory = require('../src/accessory')
 
 class MockGarageDoorOpener {
   getCharacteristic() {
@@ -10,7 +10,8 @@ class MockGarageDoorOpener {
   }
 }
 
-const mockHomebridge = {
+const homebridge = {
+  notificationRegistration: () => {},
   hap: {
     Service: {
       GarageDoorOpener: MockGarageDoorOpener,
@@ -32,11 +33,15 @@ const responses = {
   complex: [null, {}, `It's open`],
 }
 
-const log = () => {}
+const log = console.log
 
 const config = {
   name: 'Gate',
-  api: {
+  logLevel: 0,
+  webhooks: {
+    accessoryId: 'gate'
+  },
+  endpoints: {
     getTargetState: {
       url: '/state'
     },
@@ -52,64 +57,75 @@ const config = {
   },
 }
 
-describe('createEntryAccessory', () => {
+describe('accessory', () => {
   it('returns a EntryAccessory class', () => {
-    const EntryAccessory = createEntryAccessory(mockHomebridge)
-    expect(EntryAccessory, 'to be a function')
+    const Accessory = accessory(homebridge)
+    const plugin = new Accessory(log, config)
+
+    expect(plugin.constructor.name, 'to be', 'EntryAccessory')
   })
 })
 
 describe('EntryAccessory', () => {
-  const EntryAccessory = createEntryAccessory(mockHomebridge)
+  let Accessory
+
+  beforeEach(() => {
+    Accessory = accessory(homebridge)
+  })
 
   it('returns current state of 0 when OPEN', (done) => {
-    simple.mock(EntryAccessory.prototype, '_request')
+    simple.mock(Accessory.prototype, '_request')
       .callbackWith.apply(null, responses.open)
-    const accessory = new EntryAccessory(log, config)
 
-    accessory.getCurrentState((err, result) => {
+    const plugin = new Accessory(log, config)
+
+    plugin.getCurrentState((err, result) => {
       expect(result, 'to equal', 0)
       done()
     })
   })
 
   it('returns the target state of 1 when CLOSED', (done) => {
-    simple.mock(EntryAccessory.prototype, '_request')
+    simple.mock(Accessory.prototype, '_request')
       .callbackWith.apply(null, responses.closed)
-    const accessory = new EntryAccessory(log, config)
 
-    accessory.getTargetState((err, result) => {
+    const plugin = new Accessory(log, config)
+
+    plugin.getTargetState((err, result) => {
       expect(result, 'to equal', 1)
       done()
     })
   })
 
   it('sets the target state to CLOSED', (done) => {
-    simple.mock(EntryAccessory.prototype, '_request')
+    simple.mock(Accessory.prototype, '_request')
       .callbackWith.apply(null, responses.empty)
-    const accessory = new EntryAccessory(log, config)
 
-    accessory.setTargetState(1, (err, resp, result) => {
+    const plugin = new Accessory(log, config)
+
+    plugin.setTargetState(1, (err, resp, result) => {
       expect(result, 'to equal', 1)
       done()
     })
   })
 
   it('sets the target state to OPEN', (done) => {
-    simple.mock(EntryAccessory.prototype, '_request')
+    simple.mock(Accessory.prototype, '_request')
       .callbackWith.apply(null, responses.empty)
-    const accessory = new EntryAccessory(log, config)
 
-    accessory.setTargetState(0, (err, resp, result) => {
+    const plugin = new Accessory(log, config)
+
+    plugin.setTargetState(0, (err, resp, result) => {
       expect(result, 'to equal', 0)
       done()
     })
   })
 
   it('applies mappers in order', (done) => {
-    simple.mock(EntryAccessory.prototype, '_request')
+    simple.mock(Accessory.prototype, '_request')
       .callbackWith.apply(null, responses.complex)
-    const accessory = new EntryAccessory(log, Object.assign({}, config, {
+
+    const plugin = new Accessory(log, Object.assign({}, config, {
       mappers: [
         {
           type: 'regex',
@@ -128,7 +144,7 @@ describe('EntryAccessory', () => {
       ]
     }))
 
-    accessory.getCurrentState((err, result) => {
+    plugin.getCurrentState((err, result) => {
       expect(result, 'to equal', 0)
       done()
     })

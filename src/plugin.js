@@ -1,9 +1,10 @@
-const createEntryAccessory = require('./createEntryAccessory')
+const provider = require('./provider')
+const accessory = require('./accessory')
 
 module.exports = (homebridge) => {
   homebridge.registerAccessory(
     'homebridge-http-entry',
     'HttpEntry',
-    createEntryAccessory(homebridge)
+    accessory(homebridge)
   )
 }
