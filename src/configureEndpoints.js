@@ -5,7 +5,11 @@ const methods = [
   'close',
 ]
 
+const defaultEndpoint = {
+  url: ''
+}
+
 module.exports = (endpoints = {}) => methods.reduce((acc, endpoint) => ({
   ...acc,
-  [endpoint]: endpoints[endpoint]
+  [endpoint]: endpoints[endpoint] || defaultEndpoint
 }), {})

@@ -2,7 +2,10 @@
   "name": "homebridge-http-entry",
   "version": "1.0.0",
   "description": "Homebridge plugin that creates a GarageDoorOpener which uses configurable HTTP calls to set and get its state.",
-  "main": "index.js",
+  "main": "./src/plugin.js",
+  "engines": {
+    "homebridge": "^0.4.44"
+  },
   "directories": {
     "test": "test"
   },
@@ -24,7 +27,7 @@
   "scripts": {
     "test": "mocha"
   },
-  "keywords": [],
+  "keywords": ["homebridge-plugin"],
   "author": "Nic Haynes <nic@nicinabox.com> (http://nicinabox.com)",
   "license": "ISC"
 }
