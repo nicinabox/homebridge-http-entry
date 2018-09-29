@@ -26,15 +26,15 @@ module.exports = (homebridge) => {
       this.mappers = configureMappers(config.mappers)
       this.endpoints = configureEndpoints(config.endpoints)
 
-      this.getCurrentState = this._getStateType('current')
-      this.getTargetState = this._getStateType('target')
+      this.getCurrentState = this._getStateType('current').bind(this)
+      this.getTargetState = this._getStateType('target').bind(this)
       this.service = this._createService()
 
       configurePubSub(homebridge, {
         webhooks: config.webhooks,
         interval: config.pollInterval,
-        getState: this.getCurrentState.bind(this),
-      }, this._handleNotification, this._handleError)
+        getState: this.getCurrentState,
+      }, this._handleNotification.bind(this), this._handleError.bind(this))
     }
 
     identify(callback) {
@@ -72,6 +72,7 @@ module.exports = (homebridge) => {
     }
 
     _handleNotification({characteristic, value}) {
+      this.log.debug('Received notification:', characteristic, value)
       this.service.setCharacteristic(Characteristic[characteristic], value)
     }
 

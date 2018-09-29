@@ -12,7 +12,7 @@ const registerForNotifications = (homebridge, { accessoryId, password, onNotific
   }
 }
 
-const startPolling = ({ getState, interval = 30000, handleLongPoll, onError }) => {
+const startPolling = ({ getState, interval, handleLongPoll, onError }) => {
   const emitter = pollingtoevent(getState, {
     interval,
     longpolling: true,
@@ -42,7 +42,7 @@ module.exports = (homebridge, config, onNotification, onError) => {
   if (config.interval) {
     return startPolling({
       ...config,
-      handleLongPoll,
+      handleLongPoll: onNotification,
       onError
     })
   }
