@@ -35,7 +35,7 @@ Property | Type | Default | Description
 `webhooks.accessoryId` | _string_ | | A unique id for notification server urls
 `webhooks.password` | _string_ | | An optional password for notification server requests
 `pollInterval` | _number_ | | Interval to poll in milliseconds. Ignored if used with `webhooks.accessoryId`
-`endpoints` | _object_ | | Supports `getCurrentState`, `getTargetState`, `open`, `close`. See [Endpoint Configuration](#endpoint-configuration) for details
+`endpoints` | _object_ | | Supports `getState`, `open`, `close`. See [Endpoint Configuration](#endpoint-configuration) for details
 `mappers` | _object_ | | Supports `static`, `regex`, and `xpath`. See [Mappers](#mappers) for usage.
 
 ### Example config (minimal)
@@ -45,7 +45,7 @@ Property | Type | Default | Description
   "accessory": "HttpEntry",
   "name": "Garage Bay 1",
   "endpoints": {
-    "getCurrentState": {
+    "getState": {
       "method": "GET",
       "url": "http://bay1.local/state",
     },
@@ -79,8 +79,7 @@ Example:
 
 You may define any of the following endpoints:
 
-- `getCurrentState`
-- `getTargetState`
+- `getState`
 - `open`
 - `close`
 
@@ -212,7 +211,7 @@ Example sender configuration:
 
 ```
 {
-  "characteristic": "CurrentDoorState",
+  "characteristic": "TargetDoorState",
   "value": 1
 }
 ```

@@ -1,6 +1,5 @@
 const methods = [
-  'getCurrentState',
-  'getTargetState',
+  'getState',
   'open',
   'close',
 ]

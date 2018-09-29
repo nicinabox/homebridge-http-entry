@@ -3,6 +3,9 @@ const Logger = require('homebridge/lib/logger').Logger
 const accessory = require('../src/accessory')
 
 class MockGarageDoorOpener {
+  setCharacteristic() {
+    return this
+  }
   getCharacteristic() {
     return this
   }
@@ -43,10 +46,7 @@ const config = {
     accessoryId: 'gate'
   },
   endpoints: {
-    getTargetState: {
-      url: '/state'
-    },
-    getCurrentState: {
+    getState: {
       url: '/state'
     },
     open: {
@@ -86,13 +86,13 @@ describe('EntryAccessory', () => {
     })
   })
 
-  it('returns the target state of 1 when CLOSED', (done) => {
+  it('returns the current state of 1 when CLOSED', (done) => {
     simple.mock(Accessory.prototype, '_request')
       .callbackWith.apply(null, responses.closed)
 
     const plugin = new Accessory(log, config)
 
-    plugin.getTargetState((err, result) => {
+    plugin.getCurrentState((err, result) => {
       expect(result, 'to equal', 1)
       done()
     })

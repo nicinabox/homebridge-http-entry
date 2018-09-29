@@ -17,17 +17,11 @@ module.exports = (homebridge) => {
     constructor(log, config) {
       this.config = config
 
-      this.state = {
-        target: null,
-        current: null,
-      }
-
       this.log = configureLogger(log, config.enableDebugLog)
       this.mappers = configureMappers(config.mappers)
       this.endpoints = configureEndpoints(config.endpoints)
 
-      this.getCurrentState = this._getStateType('current').bind(this)
-      this.getTargetState = this._getStateType('target').bind(this)
+      this.getCurrentState = this._getCurrentState.bind(this)
       this.service = this._createService()
 
       configurePubSub(homebridge, {
@@ -54,7 +48,6 @@ module.exports = (homebridge) => {
 
       service
         .getCharacteristic(Characteristic.TargetDoorState)
-        .on('get', this.getTargetState)
         .on('set', this.setTargetState.bind(this))
 
       return service
@@ -108,21 +101,8 @@ module.exports = (homebridge) => {
       })
     }
 
-    _getStateType(stateType) {
-      return (callback) => {
-        const api = stateType === 'current'
-        ? this.endpoints.getCurrentState
-        : this.endpoints.getTargetState
-
-        this._getState(api, (err, state) => {
-          if (this.state[stateType] !== state) {
-            this.state[stateType] = state
-            this.log.debug('%s state changed to %s', stateType, state)
-          }
-
-          callback(err, state)
-        })
-      }
+    _getCurrentState(callback) {
+      this._getState(this.endpoints.getState, callback)
     }
 
     setTargetState(targetState, callback) {
@@ -138,6 +118,11 @@ module.exports = (homebridge) => {
         if (err) {
           return this._handleError(err, callback)
         }
+
+        this.service.setCharacteristic(
+          Characteristic.CurrentDoorState,
+          targetState,
+        )
 
         this.log.debug('Set state successfully')
         callback(err, resp, targetState)
