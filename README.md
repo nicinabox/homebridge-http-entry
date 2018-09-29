@@ -34,7 +34,7 @@ Property | Type | Default | Description
 `auth.password` | _string_ | | HTTP auth password
 `webhooks.accessoryId` | _string_ | | A unique id for notification server urls
 `webhooks.password` | _string_ | | An optional password for notification server requests
-`pollInterval` | _number_ | 30000 | Interval to poll in milliseconds. Ignored if used with `notificationId`
+`pollInterval` | _number_ | | Interval to poll in milliseconds. Ignored if used with `webhooks.accessoryId`
 `endpoints` | _object_ | | Supports `getCurrentState`, `getTargetState`, `open`, `close`. See [Endpoint Configuration](#endpoint-configuration) for details
 `mappers` | _object_ | | Supports `static`, `regex`, and `xpath`. See [Mappers](#mappers) for usage.
 
@@ -196,6 +196,7 @@ This accessory supports receiving updates via webhooks using [`homebridge-http-n
 
 1. Install and configure `homebridge-http-notification-server`.
 2. Add `webhooks` configuration to this accessory.
+3. Configure your sender
 
 Example `webhooks` config:
 
@@ -206,6 +207,17 @@ Example `webhooks` config:
   }
 }
 ```
+
+Example sender configuration:
+
+```
+{
+  "characteristic": "CurrentDoorState",
+  "value": 1
+}
+```
+
+`value` should reflect the current door state (0-4).
 
 ## License
 
