@@ -1,6 +1,6 @@
 {
   "name": "homebridge-http-entry",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Homebridge plugin that creates a GarageDoorOpener which uses configurable HTTP calls to set and get its state.",
   "main": "./src/plugin.js",
   "engines": {
