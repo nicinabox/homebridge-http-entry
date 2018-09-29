@@ -27,7 +27,13 @@
   "scripts": {
     "test": "mocha"
   },
-  "keywords": ["homebridge-plugin"],
+  "keywords": [
+    "homebridge-plugin",
+    "homebridge",
+    "homekit",
+    "garagedoor",
+    "gate"
+  ],
   "author": "Nic Haynes <nic@nicinabox.com> (http://nicinabox.com)",
   "license": "ISC"
 }
