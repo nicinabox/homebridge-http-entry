@@ -81,14 +81,14 @@ module.exports = (homebridge) => {
       callback && callback(err)
     }
 
-    _getTargetApi(targetState) {
+    _getEndpoint(state) {
       const { OPEN, CLOSED } = Characteristic.TargetDoorState
 
-      if (targetState === OPEN) {
+      if (state === OPEN) {
         return this.endpoints.open
       }
 
-      if (targetState === CLOSED) {
+      if (state === CLOSED) {
         return this.endpoints.close
       }
     }
