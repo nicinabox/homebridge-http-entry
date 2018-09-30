@@ -98,30 +98,6 @@ describe('EntryAccessory', () => {
     })
   })
 
-  it('sets the target state to CLOSED', (done) => {
-    simple.mock(Accessory.prototype, '_request')
-      .callbackWith.apply(null, responses.empty)
-
-    const plugin = new Accessory(log, config)
-
-    plugin.setTargetState(1, (err, resp, result) => {
-      expect(result, 'to equal', 1)
-      done()
-    })
-  })
-
-  it('sets the target state to OPEN', (done) => {
-    simple.mock(Accessory.prototype, '_request')
-      .callbackWith.apply(null, responses.empty)
-
-    const plugin = new Accessory(log, config)
-
-    plugin.setTargetState(0, (err, resp, result) => {
-      expect(result, 'to equal', 0)
-      done()
-    })
-  })
-
   it('applies mappers in order', (done) => {
     simple.mock(Accessory.prototype, '_request')
       .callbackWith.apply(null, responses.complex)

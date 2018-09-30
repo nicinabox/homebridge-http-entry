@@ -22,6 +22,8 @@ module.exports = (homebridge) => {
       this.endpoints = configureEndpoints(config.endpoints)
 
       this.getCurrentState = this._getCurrentState.bind(this)
+      this.setTargetState = this.setTargetState.bind(this)
+
       this.service = this._createService()
 
       configurePubSub(homebridge, {
@@ -48,7 +50,7 @@ module.exports = (homebridge) => {
 
       service
         .getCharacteristic(Characteristic.TargetDoorState)
-        .on('set', this.setTargetState.bind(this))
+        .on('set', this.setTargetState)
 
       return service
     }
@@ -65,8 +67,13 @@ module.exports = (homebridge) => {
     }
 
     _handleNotification({characteristic, value}) {
-      this.log.debug('Received notification:', characteristic, value)
-      this.service.setCharacteristic(Characteristic[characteristic], value)
+      if (characteristic === 'CurrentDoorState') {
+        this.service
+          .setCharacteristic(Characteristic.CurrentDoorState, value)
+          .setCharacteristic(Characteristic.TargetDoorState, value)
+      } else {
+        this.service.setCharacteristic(Characteristic[characteristic], value)
+      }
     }
 
     _handleError(err, callback) {
@@ -102,30 +109,24 @@ module.exports = (homebridge) => {
     }
 
     _getCurrentState(callback) {
-      this._getState(this.endpoints.getState, callback)
+      this._getState(this.endpoints.getState, (err, state) => {
+        this.log.debug('Got accessory state %s', state)
+        callback(err, state)
+      })
     }
 
-    setTargetState(targetState, callback) {
-      const api = this._getTargetApi(targetState)
+    setTargetState(value, callback) {
+      const endpoint = this._getEndpoint(value)
+      if (!endpoint.url) return
 
-      if (!api.url) {
-        return callback(null)
-      }
+      this.log.debug('Setting accessory state to %s', value)
 
-      this.log.debug('Setting target state to %s', targetState)
-
-      return this._request(api, (err, resp) => {
+      this._request(endpoint, (err) => {
         if (err) {
           return this._handleError(err, callback)
         }
 
-        this.service.setCharacteristic(
-          Characteristic.CurrentDoorState,
-          targetState,
-        )
-
-        this.log.debug('Set state successfully')
-        callback(err, resp, targetState)
+        callback(null)
       })
 
     }
