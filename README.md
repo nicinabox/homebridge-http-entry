@@ -26,7 +26,7 @@ npm install -g homebridge-http-entry
 Update your homebridge configuration file with a new block under `accessories`.
 
 Property | Type | Default | Description
----------|------|------
+---------|------|------|--------
 `accessory` | _string_ | | **(Required)** `HttpEntry`
 `name` | _string_ |  | **(Required)** The name of your accessory.
 `enableDebugLog` | _bool_ | `false` | Enable extra debug logging.
