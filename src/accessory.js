@@ -91,6 +91,8 @@ module.exports = (homebridge) => {
       if (state === CLOSED) {
         return this.endpoints.close
       }
+
+      return this.endpoints.cycle
     }
 
     _getState(config, callback) {
