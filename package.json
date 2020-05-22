@@ -2,9 +2,17 @@
   "name": "homebridge-http-entry",
   "version": "1.0.2",
   "description": "Homebridge plugin that creates a GarageDoorOpener which uses configurable HTTP calls to set and get its state.",
-  "main": "./src/plugin.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nicinabox/homebridge-http-entry.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nicinabox/homebridge-http-entry/issues"
+  },
+  "main": "./dist/index.js",
   "engines": {
-    "homebridge": "^0.4.44"
+    "node": ">=10.17.0",
+    "homebridge": ">0.4.53"
   },
   "directories": {
     "test": "test"
@@ -15,17 +23,33 @@
     "xmldom": "^0.1.27",
     "xpath": "^0.0.27"
   },
-  "peerDependencies": {
-    "homebridge": "^0.4.44"
-  },
   "devDependencies": {
-    "homebridge": "^0.4.45",
+    "@babel/core": "^7.9.6",
+    "@babel/preset-env": "^7.9.6",
+    "@babel/preset-typescript": "^7.9.0",
+    "@types/jest": "^25.2.3",
+    "@types/node": "^14.0.1",
+    "@types/xmldom": "^0.1.29",
+    "@typescript-eslint/eslint-plugin": "^2.33.0",
+    "@typescript-eslint/parser": "^2.33.0",
+    "babel-jest": "^26.0.1",
+    "eslint": "^6.8.0",
+    "homebridge": "^1.1.0",
+    "jest": "^26.0.1",
     "mocha": "^5.2.0",
+    "nodemon": "^2.0.4",
+    "rimraf": "^3.0.2",
     "simple-mock": "^0.8.0",
+    "ts-node": "^8.10.1",
+    "typescript": "^3.9.2",
     "unexpected": "^10.39.0"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "jest",
+    "lint": "eslint src/**.ts",
+    "watch": "npm run build && npm link && nodemon",
+    "build": "rimraf ./dist && tsc",
+    "prepublishOnly": "npm run lint && npm run build"
   },
   "keywords": [
     "homebridge-plugin",
