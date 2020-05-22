@@ -65,7 +65,7 @@ Property | Type | Default | Description
 
 ### Endpoint Configuration
 
-Endpoint configuration is passed directly to [`request`](https://github.com/request/request). Minimally `url` makes this useful, but you may also craft requests with PUT or POST methods.
+Endpoint configuration is passed directly to [`got`](https://github.com/sindresorhus/got). Minimally `url` makes this useful, but you may also craft requests with PUT or POST methods.
 
 Example:
 
@@ -82,6 +82,7 @@ You may define any of the following endpoints:
 - `getState`
 - `open`
 - `close`
+- `cycle`
 
 ## Advanced
 
