@@ -91,6 +91,38 @@ describe('EntryAccessory', () => {
         });
     });
 
+    it('makes requests with auth', (done) => {
+        nock('https://gate.lan')
+            .get('/getState')
+            .basicAuth({ user: 'user', pass: 'password' })
+            .reply(200, '1');
+
+        const config = {
+            name: 'gate',
+            auth: {
+                username: 'user',
+                password: 'password',
+            },
+            endpoints: {
+                getState: {
+                    url: 'https://gate.lan/getState',
+                    method: 'get' as const,
+                },
+            },
+        };
+        const accessory = new HttpEntryAccessory(
+            mockLogger,
+            config,
+            (mockHomebridge as unknown) as API
+        );
+
+        accessory.handleGetCurrentDoorState((err, state) => {
+            expect(err).toBeNull();
+            expect(state).toEqual(1);
+            done();
+        });
+    });
+
     it('applies mappers in order', (done) => {
         nock('https://gate.lan').get('/getState').reply(200, `It's open`);
 

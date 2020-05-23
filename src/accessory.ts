@@ -27,6 +27,10 @@ interface AccessoryConfig {
     pollInterval?: number;
     mappers?: MapperConfig[];
     endpoints?: EndpointConfig;
+    auth?: {
+        username: string;
+        password: string;
+    }
 }
 
 export class HttpEntryAccessory {
@@ -114,7 +118,10 @@ export class HttpEntryAccessory {
     }
 
     async send(config: EndpointRequestConfig) {
-        return await got(config);
+        return await got({
+            ...this.config.auth,
+            ...config
+        });
     }
 
     handleGetCurrentDoorState = async (callback: CharacteristicGetCallback) => {
