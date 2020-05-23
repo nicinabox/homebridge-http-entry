@@ -9,14 +9,23 @@ import {
 import got from "got";
 import { MapperFunction } from "./lib/mappers";
 import configureLogger from "./lib/configureLogger";
-import configureMappers from "./lib/configureMappers";
+import configureMappers, { MapperConfig } from "./lib/configureMappers";
+import configurePubSub, {
+    WebHookConfig,
+    NotificationPayload,
+} from "./lib/configurePubSub";
 import configureEndpoints, {
-    Endpoints,
     EndpointConfig,
+    EndpointRequestConfig,
 } from "./lib/configureEndpoints";
 
 interface AccessoryConfig {
-    [key: string]: any;
+    name: string;
+    enableDebugLog?: boolean;
+    webhooks?: WebHookConfig;
+    pollInterval?: number;
+    mappers?: MapperConfig[];
+    endpoints?: EndpointConfig;
 }
 
 export class HttpEntryAccessory {
@@ -24,13 +33,10 @@ export class HttpEntryAccessory {
     config: AccessoryConfig;
     api: API;
     mappers: MapperFunction[];
-    endpoints: Endpoints;
+    endpoints: EndpointConfig;
     informationService: Service;
     service: Service;
 
-    /**
-     * REQUIRED - This is the entry point to your plugin
-     */
     constructor(log: Logger, config: AccessoryConfig, api: API) {
         this.api = api;
         this.config = config;
@@ -40,7 +46,7 @@ export class HttpEntryAccessory {
 
         this.log.debug("HttpEntryAccessory Loaded");
 
-        // your accessory must have an AccessoryInformation service
+        // Required
         this.informationService = new this.api.hap.Service.AccessoryInformation()
             .setCharacteristic(
                 this.api.hap.Characteristic.Manufacturer,
@@ -49,6 +55,18 @@ export class HttpEntryAccessory {
             .setCharacteristic(this.api.hap.Characteristic.Model, "HttpEntry");
 
         this.service = this.createService();
+
+        api.on("didFinishLaunching", () => {
+            configurePubSub(
+                {
+                    webhooks: config.webhooks,
+                    interval: config.pollInterval,
+                    getState: this.getCurrentState,
+                },
+                this.handleNotification.bind(this),
+                this.handleError.bind(this)
+            );
+        });
     }
 
     createService() {
@@ -66,23 +84,33 @@ export class HttpEntryAccessory {
         return service;
     }
 
-    /**
-     * REQUIRED - This must return an array of the services you want to expose.
-     * This method must be named "getServices".
-     */
+    // Required
     getServices() {
         return [this.informationService, this.service];
     }
 
-    handleError(err, callback) {
+    handleNotification({ characteristic, value }: NotificationPayload) {
+        const { Characteristic } = this.api.hap;
+
+        if (characteristic === "CurrentDoorState") {
+            this.service
+                .setCharacteristic(Characteristic.CurrentDoorState, value)
+                .setCharacteristic(Characteristic.TargetDoorState, value);
+        } else {
+            this.service.setCharacteristic(
+                Characteristic[characteristic],
+                value
+            );
+        }
+    }
+
+    handleError(err: Error, callback?) {
         this.log.error(err.message);
         callback && callback(err);
     }
 
-    async send(config: EndpointConfig) {
-        return await got({
-            ...config
-        });
+    async send(config: EndpointRequestConfig) {
+        return await got(config);
     }
 
     async getCurrentState(callback: CharacteristicGetCallback) {
@@ -92,7 +120,7 @@ export class HttpEntryAccessory {
 
         try {
             const { body } = await this.send(this.endpoints.getState);
-            const state = parseInt(this.applyMappers(body));
+            const state = this.applyMappers(body);
             this.log.debug("Got accessory state %s", state);
             callback(null, state);
         } catch (err) {
@@ -131,9 +159,10 @@ export class HttpEntryAccessory {
     }
 
     applyMappers(value: string) {
-        return this.mappers.reduce(
+        const nextValue = this.mappers.reduce(
             (acc: string, toValue) => toValue(acc),
             value
         );
+        return parseInt(nextValue, 10);
     }
 }

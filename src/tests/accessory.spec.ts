@@ -16,7 +16,7 @@ class MockService {
 }
 
 const mockHomebridge = {
-    notificationRegistration: () => {},
+    on: jest.fn(),
     hap: {
         Service: {
             GarageDoorOpener: MockService,
