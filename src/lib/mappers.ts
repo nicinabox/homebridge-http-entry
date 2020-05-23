@@ -1,11 +1,11 @@
 import xpath from 'xpath'
 import DOM from 'xmldom'
 
-export type MapperFunction = (value: string) => string | number | undefined;
+export type MapperFunction = (value: string) => string;
 
 export interface StaticMapperParams {
     mapping: {
-        [key: string]: string | number;
+        [key: string]: string;
     }
 }
 
@@ -33,6 +33,8 @@ export const regexMapper = ({
   if (matches && captureGroup in matches) {
     return matches[captureGroup];
   }
+
+  return '';
 };
 
 export const xpathMapper = ({

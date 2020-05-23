@@ -1,63 +1,139 @@
-import { Service, PlatformAccessory, CharacteristicValue, CharacteristicSetCallback, CharacteristicGetCallback } from 'homebridge';
+import {
+    API,
+    Service,
+    Logger,
+    CharacteristicValue,
+    CharacteristicSetCallback,
+    CharacteristicGetCallback,
+} from "homebridge";
+import got from "got";
+import { MapperFunction } from "./lib/mappers";
+import configureLogger from "./lib/configureLogger";
+import configureMappers from "./lib/configureMappers";
+import configureEndpoints, {
+    Endpoints,
+    EndpointConfig,
+} from "./lib/configureEndpoints";
+
+interface AccessoryConfig {
+    [key: string]: any;
+}
 
 export class HttpEntryAccessory {
-  log: any;
-  config: any;
-  api: any;
-  informationService: any;
-  switchService: any;
-  name: any;
+    log: Logger;
+    config: AccessoryConfig;
+    api: API;
+    mappers: MapperFunction[];
+    endpoints: Endpoints;
+    informationService: Service;
+    service: Service;
 
-  /**
-   * REQUIRED - This is the entry point to your plugin
-   */
-  constructor(log, config, api) {
-    this.log = log;
-    this.config = config;
-    this.api = api;
+    /**
+     * REQUIRED - This is the entry point to your plugin
+     */
+    constructor(log: Logger, config: AccessoryConfig, api: API) {
+        this.api = api;
+        this.config = config;
+        this.log = configureLogger(log, config.enableDebugLog);
+        this.mappers = configureMappers(config.mappers);
+        this.endpoints = configureEndpoints(config.endpoints);
 
-    this.log.debug('Example Accessory Plugin Loaded');
+        this.log.debug("HttpEntryAccessory Loaded");
 
-    // your accessory must have an AccessoryInformation service
-    this.informationService = new this.api.hap.Service.AccessoryInformation()
-      .setCharacteristic(this.api.hap.Characteristic.Manufacturer, "Custom Manufacturer")
-      .setCharacteristic(this.api.hap.Characteristic.Model, "Custom Model");
+        // your accessory must have an AccessoryInformation service
+        this.informationService = new this.api.hap.Service.AccessoryInformation()
+            .setCharacteristic(
+                this.api.hap.Characteristic.Manufacturer,
+                "Nic Haynes"
+            )
+            .setCharacteristic(this.api.hap.Characteristic.Model, "HttpEntry");
 
-    // create a new "Switch" service
-    this.switchService = new this.api.hap.Service.Switch(this.name);
+        this.service = this.createService();
+    }
 
-    // link methods used when getting or setting the state of the service
-    this.switchService.getCharacteristic(this.api.hap.Characteristic.On)
-      .on('get', this.getOnHandler.bind(this))   // bind to getOnHandler method below
-      .on('set', this.setOnHandler.bind(this));  // bind to setOnHandler method below
-  }
+    createService() {
+        const { Service, Characteristic } = this.api.hap;
+        const service = new Service.GarageDoorOpener(this.config.name);
 
-  /**
-   * REQUIRED - This must return an array of the services you want to expose.
-   * This method must be named "getServices".
-   */
-  getServices() {
-    return [
-      this.informationService,
-      this.switchService,
-    ];
-  }
+        service
+            .getCharacteristic(Characteristic.CurrentDoorState)
+            .on("get", this.getCurrentState);
 
-  getOnHandler(callback) {
-    this.log.info('Getting switch state');
+        service
+            .getCharacteristic(Characteristic.TargetDoorState)
+            .on("set", this.setTargetState);
 
-    // get the current value of the switch in your own code
-    const value = false;
+        return service;
+    }
 
-    // the first argument of the callback should be null if there are no errors
-    // the second argument contains the current status of the device to return.
-    callback(null, value);
-  }
+    /**
+     * REQUIRED - This must return an array of the services you want to expose.
+     * This method must be named "getServices".
+     */
+    getServices() {
+        return [this.informationService, this.service];
+    }
 
-  setOnHandler(value, callback) {
-    this.log.info('Setting switch state to:', value);
+    handleError(err, callback) {
+        this.log.error(err.message);
+        callback && callback(err);
+    }
 
-    // the first argument of the callback should be null if there are no errors
-    callback(null);
-  }
+    async send(config: EndpointConfig) {
+        return await got({
+            ...config
+        });
+    }
+
+    async getCurrentState(callback: CharacteristicGetCallback) {
+        if (!this.endpoints.getState) {
+            return callback(null);
+        }
+
+        try {
+            const { body } = await this.send(this.endpoints.getState);
+            const state = parseInt(this.applyMappers(body));
+            this.log.debug("Got accessory state %s", state);
+            callback(null, state);
+        } catch (err) {
+            return this.handleError(err, callback);
+        }
+    }
+
+    async setTargetState(
+        value: CharacteristicValue,
+        callback: CharacteristicSetCallback
+    ) {
+        const endpoint = this.getEndpoint(value);
+        if (!endpoint || !endpoint.url) return;
+
+        try {
+            await this.send(endpoint);
+            this.log.debug("Set accessory state to %s", value);
+            callback(null);
+        } catch (err) {
+            this.handleError(err, callback);
+        }
+    }
+
+    getEndpoint(targetState: CharacteristicValue) {
+        const { OPEN, CLOSED } = this.api.hap.Characteristic.TargetDoorState;
+
+        if (targetState === OPEN) {
+            return this.endpoints.open;
+        }
+
+        if (targetState === CLOSED) {
+            return this.endpoints.close;
+        }
+
+        return this.endpoints.cycle;
+    }
+
+    applyMappers(value: string) {
+        return this.mappers.reduce(
+            (acc: string, toValue) => toValue(acc),
+            value
+        );
+    }
 }

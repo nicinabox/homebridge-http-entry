@@ -1,11 +1,11 @@
-import { Options as GotOptions } from 'got';
+import { OptionsOfTextResponseBody } from "got";
 
 export type EndpointMethods = 'getState' | 'open' | 'close' | 'cycle';
 
+export interface EndpointConfig extends OptionsOfTextResponseBody {}
+
 export type Endpoints = {
-    [key in EndpointMethods]?: GotOptions & {
-        url: string;
-    };
+    [key in EndpointMethods]?: EndpointConfig;
 };
 
 const methods: EndpointMethods[] = ['getState', 'open', 'close', 'cycle'];
