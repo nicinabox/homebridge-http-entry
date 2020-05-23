@@ -45,10 +45,11 @@ describe('EntryAccessory', () => {
         nock('https://gate.lan').get('/getState').reply(200, '0');
 
         const config = {
+            name: 'gate',
             endpoints: {
                 getState: {
                     url: 'https://gate.lan/getState',
-                    method: 'get',
+                    method: 'get' as const,
                 },
             },
         };
@@ -58,7 +59,7 @@ describe('EntryAccessory', () => {
             (mockHomebridge as unknown) as API
         );
 
-        accessory.getCurrentState((err, state) => {
+        accessory.handleGetCurrentDoorState((err, state) => {
             expect(err).toBeNull();
             expect(state).toEqual(0);
             done();
@@ -69,10 +70,11 @@ describe('EntryAccessory', () => {
         nock('https://gate.lan').get('/getState').reply(200, '1');
 
         const config = {
+            name: 'gate',
             endpoints: {
                 getState: {
                     url: 'https://gate.lan/getState',
-                    method: 'get',
+                    method: 'get' as const,
                 },
             },
         };
@@ -82,7 +84,7 @@ describe('EntryAccessory', () => {
             (mockHomebridge as unknown) as API
         );
 
-        accessory.getCurrentState((err, state) => {
+        accessory.handleGetCurrentDoorState((err, state) => {
             expect(err).toBeNull();
             expect(state).toEqual(1);
             done();
@@ -93,21 +95,22 @@ describe('EntryAccessory', () => {
         nock('https://gate.lan').get('/getState').reply(200, `It's open`);
 
         const config = {
+            name: 'gate',
             endpoints: {
                 getState: {
                     url: 'https://gate.lan/getState',
-                    method: 'get',
+                    method: 'get' as const,
                 },
             },
             mappers: [
                 {
-                    type: 'regex',
+                    type: 'regex' as const,
                     parameters: {
                         expression: '(open)',
                     },
                 },
                 {
-                    type: 'static',
+                    type: 'static' as const,
                     parameters: {
                         mapping: {
                             open: '0',
@@ -122,7 +125,7 @@ describe('EntryAccessory', () => {
             (mockHomebridge as unknown) as API
         );
 
-        accessory.getCurrentState((err, state) => {
+        accessory.handleGetCurrentDoorState((err, state) => {
             expect(err).toBeNull();
             expect(state).toEqual(0);
             done();
@@ -133,10 +136,11 @@ describe('EntryAccessory', () => {
         nock('https://gate.lan').get('/open').reply(200, '0');
 
         const config = {
+            name: 'gate',
             endpoints: {
                 open: {
                     url: 'https://gate.lan/open',
-                    method: 'get',
+                    method: 'get' as const,
                 },
             },
         };
@@ -146,7 +150,7 @@ describe('EntryAccessory', () => {
             (mockHomebridge as unknown) as API
         );
 
-        accessory.setTargetState(0, (err, state) => {
+        accessory.handleSetTargetDoorState(0, (err, state) => {
             expect(err).toBeNull();
             expect(state).toBeUndefined();
             done();

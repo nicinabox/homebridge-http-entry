@@ -1,6 +1,7 @@
 import {
     API,
     Service,
+    Characteristic,
     Logger,
     CharacteristicValue,
     CharacteristicSetCallback,
@@ -37,6 +38,9 @@ export class HttpEntryAccessory {
     informationService: Service;
     service: Service;
 
+    Service: typeof Service;
+    Characteristic: typeof Characteristic;
+
     constructor(log: Logger, config: AccessoryConfig, api: API) {
         this.api = api;
         this.config = config;
@@ -44,15 +48,18 @@ export class HttpEntryAccessory {
         this.mappers = configureMappers(config.mappers);
         this.endpoints = configureEndpoints(config.endpoints);
 
+        this.Service = this.api.hap.Service;
+        this.Characteristic = this.api.hap.Characteristic;
+
         this.log.debug('HttpEntryAccessory Loaded');
 
         // Required
-        this.informationService = new this.api.hap.Service.AccessoryInformation()
+        this.informationService = new this.Service.AccessoryInformation()
             .setCharacteristic(
-                this.api.hap.Characteristic.Manufacturer,
-                'Nic Haynes'
+                this.Characteristic.Manufacturer,
+                'nicinabox'
             )
-            .setCharacteristic(this.api.hap.Characteristic.Model, 'HttpEntry');
+            .setCharacteristic(this.Characteristic.Model, 'HttpEntry');
 
         this.service = this.createService();
 
@@ -61,7 +68,7 @@ export class HttpEntryAccessory {
                 {
                     webhooks: config.webhooks,
                     interval: config.pollInterval,
-                    getState: this.getCurrentState,
+                    getState: this.handleGetCurrentDoorState,
                 },
                 this.handleNotification.bind(this),
                 this.handleError.bind(this)
@@ -70,16 +77,15 @@ export class HttpEntryAccessory {
     }
 
     createService() {
-        const { Service, Characteristic } = this.api.hap;
-        const service = new Service.GarageDoorOpener(this.config.name);
+        const service = new this.Service.GarageDoorOpener(this.config.name);
 
         service
-            .getCharacteristic(Characteristic.CurrentDoorState)
-            .on('get', this.getCurrentState);
+            .getCharacteristic(this.Characteristic.CurrentDoorState)
+            .on('get', this.handleGetCurrentDoorState);
 
         service
-            .getCharacteristic(Characteristic.TargetDoorState)
-            .on('set', this.setTargetState);
+            .getCharacteristic(this.Characteristic.TargetDoorState)
+            .on('set', this.handleSetTargetDoorState);
 
         return service;
     }
@@ -90,15 +96,13 @@ export class HttpEntryAccessory {
     }
 
     handleNotification({ characteristic, value }: NotificationPayload) {
-        const { Characteristic } = this.api.hap;
-
         if (characteristic === 'CurrentDoorState') {
             this.service
-                .setCharacteristic(Characteristic.CurrentDoorState, value)
-                .setCharacteristic(Characteristic.TargetDoorState, value);
+                .setCharacteristic(this.Characteristic.CurrentDoorState, value)
+                .setCharacteristic(this.Characteristic.TargetDoorState, value);
         } else {
             this.service.setCharacteristic(
-                Characteristic[characteristic],
+                this.Characteristic[characteristic],
                 value
             );
         }
@@ -113,7 +117,7 @@ export class HttpEntryAccessory {
         return await got(config);
     }
 
-    async getCurrentState(callback: CharacteristicGetCallback) {
+    handleGetCurrentDoorState = async (callback: CharacteristicGetCallback) => {
         if (!this.endpoints.getState) {
             return callback(null);
         }
@@ -128,10 +132,10 @@ export class HttpEntryAccessory {
         }
     }
 
-    async setTargetState(
+    handleSetTargetDoorState = async (
         value: CharacteristicValue,
         callback: CharacteristicSetCallback
-    ) {
+    ) => {
         const endpoint = this.getEndpoint(value);
         if (!endpoint || !endpoint.url) return;
 
@@ -145,7 +149,7 @@ export class HttpEntryAccessory {
     }
 
     getEndpoint(targetState: CharacteristicValue) {
-        const { OPEN, CLOSED } = this.api.hap.Characteristic.TargetDoorState;
+        const { OPEN, CLOSED } = this.Characteristic.TargetDoorState;
 
         if (targetState === OPEN) {
             return this.endpoints.open;
