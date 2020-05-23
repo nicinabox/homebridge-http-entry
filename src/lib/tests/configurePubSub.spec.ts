@@ -1,35 +1,42 @@
-import configurePubSub from '../configurePubSub';
+import configurePubSub from "../configurePubSub";
 import pollingtoevent from "polling-to-event";
 
-describe('configurePubSub', () => {
-    it('registers for notifications if supported', () => {
-        const mockHomebridge = {
-          notificationRegistration: jest.fn(),
-        };
+describe("configurePubSub", () => {
+    beforeEach(() => {
+        global.notificationRegistration = jest.fn();
+    })
+
+    it("registers for notifications if supported", () => {
         const config = {
-          webhooks: {
-            accessoryId: 'test'
-          },
+            webhooks: {
+                accessoryId: "test",
+            },
         };
 
-        configurePubSub(mockHomebridge, config, jest.fn(), jest.fn());
-        expect(mockHomebridge.notificationRegistration).toBeCalled();
+        configurePubSub(config, jest.fn(), jest.fn());
+        expect(global.notificationRegistration).toBeCalled();
     });
 
-    it('starts polling if notifications not supported', () => {
-        const mockHomebridge = {};
+    it("starts polling if notifications not supported", () => {
         const config = {
-          interval: 1000,
-          getState: jest.fn(),
+            interval: 1000,
+            getState: jest.fn(),
         };
-        const result = configurePubSub(mockHomebridge, config, jest.fn(), jest.fn());
+        const result = configurePubSub(
+            config,
+            jest.fn(),
+            jest.fn()
+        );
         expect(result).toBeInstanceOf(pollingtoevent);
     });
 
-    it('returns undefined if notifications are not supported and polling interval is not specified', () => {
-        const mockHomebridge = {};
+    it("returns undefined if notifications are not supported and polling interval is not specified", () => {
         const config = {};
-        const result = configurePubSub(mockHomebridge, config, jest.fn(), jest.fn());
+        const result = configurePubSub(
+            config,
+            jest.fn(),
+            jest.fn()
+        );
         expect(result).toBeUndefined();
     });
 });
