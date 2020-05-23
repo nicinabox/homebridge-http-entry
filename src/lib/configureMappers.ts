@@ -1,8 +1,8 @@
 import mappers, {
-    MapperFunction,
     StaticMapperParams,
     RegexMapperParams,
     XPathMapperParams,
+    MapperFunction,
 } from './mappers';
 
 export interface StaticMapperConfig {
