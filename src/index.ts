@@ -6,5 +6,5 @@ import { HttpEntryAccessory } from './accessory';
  * This method registers the platform with Homebridge
  */
 export = (api: API) => {
-  api.registerAccessory(ACCESSORY_NAME, HttpEntryAccessory);
-}
+    api.registerAccessory(ACCESSORY_NAME, HttpEntryAccessory);
+};

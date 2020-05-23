@@ -1,4 +1,4 @@
-import configureEndpoints from '../configureEndpoints'
+import configureEndpoints from '../configureEndpoints';
 
 describe('configureEndpoints', () => {
     it('returns endpoint options for defined endpoints', () => {
@@ -6,15 +6,15 @@ describe('configureEndpoints', () => {
             getState: {
                 url: 'getStateUrl',
                 method: 'PUT' as const,
-                body: 'OPEN'
-            }
+                body: 'OPEN',
+            },
         };
         expect(configureEndpoints(endpoints)).toEqual({
-          getState: {
-            url: "getStateUrl",
-            method: "PUT",
-            body: "OPEN",
-          },
+            getState: {
+                url: 'getStateUrl',
+                method: 'PUT',
+                body: 'OPEN',
+            },
         });
     });
 });

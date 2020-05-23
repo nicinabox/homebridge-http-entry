@@ -1,7 +1,7 @@
 import { API } from 'homebridge';
 import got from 'got';
 import nock from 'nock';
-import { HttpEntryAccessory } from "../accessory";
+import { HttpEntryAccessory } from '../accessory';
 
 class MockService {
     setCharacteristic() {
@@ -32,27 +32,31 @@ const mockHomebridge = {
     },
 };
 
-describe("EntryAccessory", () => {
+describe('EntryAccessory', () => {
     let mockLogger;
     beforeEach(() => {
         mockLogger = {
             debug: jest.fn(),
             error: jest.fn(),
-        }
+        };
     });
 
-    it("returns current state of 0 when OPEN", (done) => {
-        nock("https://gate.lan").get("/getState").reply(200, "0");
+    it('returns current state of 0 when OPEN', (done) => {
+        nock('https://gate.lan').get('/getState').reply(200, '0');
 
         const config = {
             endpoints: {
                 getState: {
-                    url: "https://gate.lan/getState",
+                    url: 'https://gate.lan/getState',
                     method: 'get',
                 },
             },
         };
-        const accessory = new HttpEntryAccessory(mockLogger, config, mockHomebridge as unknown as API);
+        const accessory = new HttpEntryAccessory(
+            mockLogger,
+            config,
+            (mockHomebridge as unknown) as API
+        );
 
         accessory.getCurrentState((err, state) => {
             expect(err).toBeNull();
@@ -61,14 +65,14 @@ describe("EntryAccessory", () => {
         });
     });
 
-    it("returns the current state of 1 when CLOSED", (done) => {
-        nock("https://gate.lan").get("/getState").reply(200, "1");
+    it('returns the current state of 1 when CLOSED', (done) => {
+        nock('https://gate.lan').get('/getState').reply(200, '1');
 
         const config = {
             endpoints: {
                 getState: {
-                    url: "https://gate.lan/getState",
-                    method: "get",
+                    url: 'https://gate.lan/getState',
+                    method: 'get',
                 },
             },
         };
@@ -85,28 +89,28 @@ describe("EntryAccessory", () => {
         });
     });
 
-    it("applies mappers in order", (done) => {
-        nock("https://gate.lan").get("/getState").reply(200, `It's open`);
+    it('applies mappers in order', (done) => {
+        nock('https://gate.lan').get('/getState').reply(200, `It's open`);
 
         const config = {
             endpoints: {
                 getState: {
-                    url: "https://gate.lan/getState",
-                    method: "get",
+                    url: 'https://gate.lan/getState',
+                    method: 'get',
                 },
             },
             mappers: [
                 {
-                    type: "regex",
+                    type: 'regex',
                     parameters: {
-                        expression: "(open)",
+                        expression: '(open)',
                     },
                 },
                 {
-                    type: "static",
+                    type: 'static',
                     parameters: {
                         mapping: {
-                            open: "0",
+                            open: '0',
                         },
                     },
                 },
@@ -126,26 +130,26 @@ describe("EntryAccessory", () => {
     });
 
     it('sets the target state', (done) => {
-         nock("https://gate.lan").get("/open").reply(200, '0');
+        nock('https://gate.lan').get('/open').reply(200, '0');
 
-         const config = {
-             endpoints: {
-                 open: {
-                    url: "https://gate.lan/open",
-                    method: "get",
-                 },
-             },
-         };
-         const accessory = new HttpEntryAccessory(
-             mockLogger,
-             config,
-             (mockHomebridge as unknown) as API
-         );
+        const config = {
+            endpoints: {
+                open: {
+                    url: 'https://gate.lan/open',
+                    method: 'get',
+                },
+            },
+        };
+        const accessory = new HttpEntryAccessory(
+            mockLogger,
+            config,
+            (mockHomebridge as unknown) as API
+        );
 
-         accessory.setTargetState(0, (err, state) => {
+        accessory.setTargetState(0, (err, state) => {
             expect(err).toBeNull();
             expect(state).toBeUndefined();
             done();
-         });
+        });
     });
 });

@@ -1,13 +1,13 @@
-import configureLogger from '../configureLogger'
-import { setDebugEnabled } from "homebridge/lib/logger";
+import configureLogger from '../configureLogger';
+import { setDebugEnabled } from 'homebridge/lib/logger';
 
 jest.mock('homebridge/lib/logger', () => ({
-    setDebugEnabled: jest.fn()
-}))
+    setDebugEnabled: jest.fn(),
+}));
 
 describe('configureLogger', () => {
     it('returns logger', () => {
-        const log = jest.fn()
+        const log = jest.fn();
         expect(configureLogger(log)).toEqual(log);
     });
 

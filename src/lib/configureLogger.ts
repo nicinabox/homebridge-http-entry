@@ -1,6 +1,6 @@
-import { setDebugEnabled } from 'homebridge/lib/logger'
+import { setDebugEnabled } from 'homebridge/lib/logger';
 
 export default (log, enableDebug = false) => {
-  setDebugEnabled(enableDebug);
-  return log;
+    setDebugEnabled(enableDebug);
+    return log;
 };

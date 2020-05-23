@@ -5,19 +5,19 @@ import {
     CharacteristicValue,
     CharacteristicSetCallback,
     CharacteristicGetCallback,
-} from "homebridge";
-import got from "got";
-import { MapperFunction } from "./lib/mappers";
-import configureLogger from "./lib/configureLogger";
-import configureMappers, { MapperConfig } from "./lib/configureMappers";
+} from 'homebridge';
+import got from 'got';
+import { MapperFunction } from './lib/mappers';
+import configureLogger from './lib/configureLogger';
+import configureMappers, { MapperConfig } from './lib/configureMappers';
 import configurePubSub, {
     WebHookConfig,
     NotificationPayload,
-} from "./lib/configurePubSub";
+} from './lib/configurePubSub';
 import configureEndpoints, {
     EndpointConfig,
     EndpointRequestConfig,
-} from "./lib/configureEndpoints";
+} from './lib/configureEndpoints';
 
 interface AccessoryConfig {
     name: string;
@@ -44,19 +44,19 @@ export class HttpEntryAccessory {
         this.mappers = configureMappers(config.mappers);
         this.endpoints = configureEndpoints(config.endpoints);
 
-        this.log.debug("HttpEntryAccessory Loaded");
+        this.log.debug('HttpEntryAccessory Loaded');
 
         // Required
         this.informationService = new this.api.hap.Service.AccessoryInformation()
             .setCharacteristic(
                 this.api.hap.Characteristic.Manufacturer,
-                "Nic Haynes"
+                'Nic Haynes'
             )
-            .setCharacteristic(this.api.hap.Characteristic.Model, "HttpEntry");
+            .setCharacteristic(this.api.hap.Characteristic.Model, 'HttpEntry');
 
         this.service = this.createService();
 
-        api.on("didFinishLaunching", () => {
+        api.on('didFinishLaunching', () => {
             configurePubSub(
                 {
                     webhooks: config.webhooks,
@@ -75,11 +75,11 @@ export class HttpEntryAccessory {
 
         service
             .getCharacteristic(Characteristic.CurrentDoorState)
-            .on("get", this.getCurrentState);
+            .on('get', this.getCurrentState);
 
         service
             .getCharacteristic(Characteristic.TargetDoorState)
-            .on("set", this.setTargetState);
+            .on('set', this.setTargetState);
 
         return service;
     }
@@ -92,7 +92,7 @@ export class HttpEntryAccessory {
     handleNotification({ characteristic, value }: NotificationPayload) {
         const { Characteristic } = this.api.hap;
 
-        if (characteristic === "CurrentDoorState") {
+        if (characteristic === 'CurrentDoorState') {
             this.service
                 .setCharacteristic(Characteristic.CurrentDoorState, value)
                 .setCharacteristic(Characteristic.TargetDoorState, value);
@@ -121,7 +121,7 @@ export class HttpEntryAccessory {
         try {
             const { body } = await this.send(this.endpoints.getState);
             const state = this.applyMappers(body);
-            this.log.debug("Got accessory state %s", state);
+            this.log.debug('Got accessory state %s', state);
             callback(null, state);
         } catch (err) {
             return this.handleError(err, callback);
@@ -137,7 +137,7 @@ export class HttpEntryAccessory {
 
         try {
             await this.send(endpoint);
-            this.log.debug("Set accessory state to %s", value);
+            this.log.debug('Set accessory state to %s', value);
             callback(null);
         } catch (err) {
             this.handleError(err, callback);

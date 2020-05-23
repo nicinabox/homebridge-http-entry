@@ -1,12 +1,16 @@
-import pollingtoevent from "polling-to-event";
+import pollingtoevent from 'polling-to-event';
 
 declare global {
-    function notificationRegistration(notificationID: string, handlerFunction: NotificationHandler, password?: string): void
+    function notificationRegistration(
+        notificationID: string,
+        handlerFunction: NotificationHandler,
+        password?: string
+    ): void;
 }
 
 export interface NotificationPayload {
-    characteristic: string,
-    value: number
+    characteristic: string;
+    value: number;
 }
 
 export interface PubSubConfig {
@@ -30,7 +34,7 @@ const isNotificationSupported = (webhooks?: WebHookConfig) => {
         webhooks &&
         webhooks.accessoryId &&
         global.notificationRegistration &&
-        typeof global.notificationRegistration === "function"
+        typeof global.notificationRegistration === 'function'
     );
 };
 
@@ -48,23 +52,28 @@ const registerForNotifications = ({
     }
 };
 
-const startPolling = ({ getState, interval = 1000, handleLongPoll, onError }: PubSubConfig & {
-    handleLongPoll: NotificationHandler,
-    onError: ErrorHandler
+const startPolling = ({
+    getState,
+    interval = 1000,
+    handleLongPoll,
+    onError,
+}: PubSubConfig & {
+    handleLongPoll: NotificationHandler;
+    onError: ErrorHandler;
 }) => {
     const emitter = pollingtoevent(getState, {
         interval,
         longpolling: true,
     });
 
-    emitter.on("longpoll", (value) => {
+    emitter.on('longpoll', (value) => {
         handleLongPoll({
-            characteristic: "CurrentDoorState",
+            characteristic: 'CurrentDoorState',
             value,
         });
     });
 
-    emitter.on("err", onError);
+    emitter.on('err', onError);
 
     return emitter;
 };
