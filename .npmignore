@@ -1,0 +1,15 @@
+.eslintrc
+
+# typescript
+tsconfig.json
+
+# vscode
+.vscode
+
+# nodemon
+nodemon.json
+
+# Logs
+logs
+*.log
+npm-debug.log*
