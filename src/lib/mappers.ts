@@ -1,7 +1,7 @@
 import xpath from 'xpath';
 import DOM from 'xmldom';
 
-export type MapperFunction = (value: string) => string;
+export type MapperFunction = (value: string) => string | null;
 
 export interface StaticMapperParams {
     mapping: {
@@ -51,7 +51,7 @@ export const xpathMapper = ({
     }
 
     if (Array.isArray(result) && result.length > index) {
-        return result[index].data;
+        return (result[index] as Node).nodeValue;
     }
 
     return value;

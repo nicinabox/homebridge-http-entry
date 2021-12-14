@@ -48,7 +48,7 @@ const registerForNotifications = ({
     try {
         global.notificationRegistration(accessoryId, onNotification, password);
     } catch (error) {
-        onError(error);
+        onError(error as Error);
     }
 };
 

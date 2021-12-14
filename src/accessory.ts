@@ -30,7 +30,7 @@ interface AccessoryConfig {
     auth?: {
         username: string;
         password: string;
-    }
+    };
 }
 
 export class HttpEntryAccessory {
@@ -135,7 +135,7 @@ export class HttpEntryAccessory {
             this.log.debug('Got accessory state %s', state);
             callback(null, state);
         } catch (err) {
-            return this.handleError(err, callback);
+            return this.handleError(err as Error, callback);
         }
     }
 
@@ -151,7 +151,7 @@ export class HttpEntryAccessory {
             this.log.debug('Set accessory state to %s', value);
             callback(null);
         } catch (err) {
-            this.handleError(err, callback);
+            this.handleError(err as Error, callback);
         }
     }
 
@@ -171,8 +171,8 @@ export class HttpEntryAccessory {
 
     applyMappers(value: string) {
         const nextValue = this.mappers.reduce(
-            (acc: string, toValue) => toValue(acc),
-            value
+            (acc: string, toValue) => toValue(acc) ?? '',
+            value,
         );
         return parseInt(nextValue, 10);
     }

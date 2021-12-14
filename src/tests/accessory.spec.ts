@@ -1,5 +1,4 @@
 import { API } from 'homebridge';
-import got from 'got';
 import nock from 'nock';
 import { HttpEntryAccessory } from '../accessory';
 

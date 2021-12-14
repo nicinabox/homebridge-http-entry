@@ -219,6 +219,30 @@ Example sender configuration:
 
 `value` should reflect the current door state (0-4).
 
+## Developing
+
+## Testing
+
+See https://github.com/homebridge/homebridge#plugin-development
+
+1. `yarn test`
+2. `yarn watch`
+4. Configure homebridge from ~/.homebridge
+5. `yarn http-server` and edit response from TestGateAccessory
+6. Use an http client to create requests to notification server
+
+Example:
+
+```
+POST http://127.0.0.1:8081
+{
+    "characteristic": "CurrentDoorState",
+    "value": "1",
+    "accessory": "gate"
+}
+```
+
+
 ## License
 
 ISC
